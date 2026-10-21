@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { File, Paths } from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 
 // This is the main entry point of the React Native application. It sets up the initial state and renders the main view of the app.
 export default function App() {
@@ -152,12 +153,11 @@ export default function App() {
         csvContent += `${r.test},${r.duration}\n`;
       });
       // Create a new file in the document directory and write the CSV content to it.
-      const file = new File(Paths.document, "benchmark_results.csv");
-      file.create();
-      file.write(csvContent);
-      await Share.share({
-        url: file.uri,
-        title: "Benchmark-tulokset",
+      const fileUri = `${FileSystem.documentDirectory}benchmark_results.csv`;
+      await FileSystem.writeAsStringAsync(fileUri, csvContent);
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "text/csv",
+        dialogTitle: "Jaa tulokset",
       });
     } catch (error) {
       Alert.alert("Virhe", "Tiedoston vienti epäonnistui.");
@@ -193,7 +193,7 @@ export default function App() {
       {!isRunning && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={runCPUTest}>
-            <Text style={styles.buttonText}>1. CPU Testi (1M)</Text>
+            <Text style={styles.buttonText}>1. CPU Testi</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button} onPress={runRenderTest}>
@@ -201,7 +201,7 @@ export default function App() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button} onPress={runMemoryTest}>
-            <Text style={styles.buttonText}>3. Muistintestaus (1M)</Text>
+            <Text style={styles.buttonText}>3. Muistintestaus</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
