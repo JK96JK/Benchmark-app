@@ -72,7 +72,7 @@ export default function App() {
     setIsRenderTestActive(true);
     renderCount.current = 0;
     renderStartTime.current = performance.now();
-    setColors(getRandomColors(1000));
+    setColors(getRandomColors(900));
   };
 
   // useEffect hook to handle the render test logic.
@@ -83,7 +83,7 @@ export default function App() {
         const now = performance.now();
         if (now - renderStartTime.current < 5000) {
           renderCount.current++; // Increment the render count
-          setColors(getRandomColors(1000)); // Generate new colors to trigger re-rendering
+          setColors(getRandomColors(900)); // Generate new colors to trigger re-rendering
         } else {
           // After 5 seconds, stop the render test and update the result state with the number of renders completed.
           setIsRenderTestActive(false);
@@ -278,6 +278,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     backgroundColor: "black",
+    overflow: "hidden",
   },
-  cell: { width: 15, height: 15 },
+  cell: { width: 10, height: 10 },
 });
