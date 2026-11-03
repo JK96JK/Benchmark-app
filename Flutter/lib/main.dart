@@ -38,6 +38,21 @@ class TestResult {
   TestResult(this.test, this.duration);
 }
 
+// Define the BenchmarkItem class to represent the structure of the mock data used in the memory test.
+class BenchmarkItem {
+  final int id;
+  final String name;
+  final int timestamp;
+  final bool active;
+
+  BenchmarkItem({
+    required this.id,
+    required this.name,
+    required this.timestamp,
+    required this.active,
+  });
+}
+
 class BenchmarkScreenState extends State<BenchmarkScreen> {
   final List<TestResult> result = [];
   bool isRunning = false;
@@ -129,7 +144,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     });
   }
 
-  // 3. Muistintestaus
+  // 3. Memory test
   Future<void> runMemoryTest() async {
     setState(() {
       isRunning = true;
@@ -137,37 +152,39 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     });
     await Future.delayed(const Duration(milliseconds: 100));
 
-    final stopwatch = Stopwatch()..start();
-    List<Map<String, dynamic>>? mockData = [];
-    for (int i = 0; i < 1000000; i++) {
-      mockData.add({
-        'id': i,
+    final startTime = DateTime.now().millisecondsSinceEpoch;
+    const recordCount = 1000000;
+    const baseTimestamp = 1700000000000;
 
-        'name': 'Käyttäjä $i',
+    // 1. Reserve memory for 1 million objects
+    List<BenchmarkItem>? list = List<BenchmarkItem>.generate(
+      recordCount,
+      (i) => BenchmarkItem(
+        id: i,
+        name: 'Käyttäjä $i',
+        timestamp: baseTimestamp + i,
+        active: i % 2 == 0,
+      ),
+      growable: true,
+    );
 
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-
-        'active': i % 2 == 0,
-      });
+    // 2. Data processing: Calculate checksum of active items
+    int checksum = 0;
+    for (final item in list) {
+      if (item.active) checksum += item.id;
     }
 
-    String? jsonString = jsonEncode(mockData);
-    dynamic parsedData = jsonDecode(jsonString);
-    stopwatch.stop();
+    final endTime = DateTime.now().millisecondsSinceEpoch;
+    final duration = endTime - startTime;
 
-    mockData = null;
-    jsonString = null;
-    parsedData = null;
+    // 3. Vapautus roskienkeruulle
+    list.clear();
+    list = null;
 
     setState(() {
+      result.add(TestResult('Muistintestaus (1M oliota)', '$duration ms'));
       isRunning = false;
-      statusText = "Muistintestaus valmis";
-      result.add(
-        TestResult(
-          'Muistintestaus (1M JSON objektia)',
-          '${stopwatch.elapsedMilliseconds} ms',
-        ),
-      );
+      statusText = 'Muistintestaus valmis';
     });
   }
 

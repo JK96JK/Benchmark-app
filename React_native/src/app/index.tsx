@@ -12,6 +12,14 @@ import React, { useEffect, useRef, useState } from "react";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 
+// Define the BenchmarkItem interface to represent the structure of the mock data used in the memory test.
+interface BenchmarkItem {
+  id: number;
+  name: string;
+  timestamp: number;
+  active: boolean;
+}
+
 // This is the main entry point of the React Native application. It sets up the initial state and renders the main view of the app.
 export default function App() {
   // State variables for managing the test results, running status, and status text
@@ -111,29 +119,36 @@ export default function App() {
     setStatusText("Suoritetaan muistintestausta...");
     setTimeout(() => {
       const startTime = performance.now();
-      let mockData: any[] | null = [];
-      for (let i = 0; i < 1000000; i++) {
-        mockData.push({
+      const recordCount = 1000000;
+      const baseTimestamp = 1700000000000;
+
+      // 1. Reserve memory for the list of BenchmarkItem objects and populate it with mock data.
+      let list: BenchmarkItem[] | null = new Array(recordCount);
+      for (let i = 0; i < recordCount; i++) {
+        list[i] = {
           id: i,
           name: `Käyttäjä ${i}`,
-          timestamp: Date.now(),
-          isActive: i % 2 === 0,
-        });
+          timestamp: baseTimestamp + i,
+          active: i % 2 === 0,
+        };
       }
-      // Convert the mock data to a JSON string and then parse it back to an object to simulate memory usage.
-      let jsonString: string | null = JSON.stringify(mockData);
-      let parsedData: any = JSON.parse(jsonString);
+      // 2. Data handding.
+      let checksum = 0;
+      for (let i = 0; i < recordCount; i++) {
+        if (list[i].active) checksum += list[i].id;
+      }
+
       const endTime = performance.now();
-      const timeMs = Math.round(endTime - startTime);
-      // Clean references for Garbage Collection
-      mockData = null;
-      jsonString = null;
-      parsedData = null;
+      const duration = Math.round(endTime - startTime);
+
+      // 3. Release the memory used by the list of BenchmarkItem objects to free up resources.
+      list = null;
+
       setResult((prev) => [
         ...prev,
         {
-          test: "Muistintestaus (1M JSON objektia)",
-          duration: `${timeMs} ms`,
+          test: "Muistintestaus (1M oliota)",
+          duration: `${duration} ms`,
         },
       ]);
       setIsRunning(false);
