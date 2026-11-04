@@ -1,4 +1,4 @@
-package com.example.benchmark
+package com.example.benchmark_kotlin
 
 import org.junit.Test
 

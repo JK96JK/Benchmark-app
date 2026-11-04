@@ -1,4 +1,4 @@
-package com.example.benchmark.ui.theme
+package com.example.benchmark_kotlin.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

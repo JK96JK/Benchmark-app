@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.benchmark"
+    namespace = "com.example.benchmark_kotlin"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.benchmark"
+        applicationId = "com.example.benchmark_kotlin"
         minSdk = 36
         targetSdk = 36
         versionCode = 1
@@ -25,6 +25,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

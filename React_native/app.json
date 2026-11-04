@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.jortsi.Benchmark"
+      "package": "com.jortsi.Benchmark_React_native",
     },
     "web": {
       "output": "server",

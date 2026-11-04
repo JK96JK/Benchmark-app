@@ -1,4 +1,4 @@
-package com.example.benchmark
+package com.example.benchmark_kotlin
 
 import android.content.Context
 import android.content.Intent
@@ -185,7 +185,7 @@ fun BenchmarkScreen(){
             }
             val file=File(context.cacheDir,"benchmark_results.csv")
             file.writeText(csvContent.toString())
-            val uri=FileProvider.getUriForFile(context,"com.example.benchmark.fileprovider",file)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             val intent=Intent(Intent.ACTION_SEND)
             intent.type="text/csv"
             intent.putExtra(Intent.EXTRA_STREAM,uri)
