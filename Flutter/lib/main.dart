@@ -52,6 +52,7 @@ class BenchmarkItem {
   });
 }
 
+// The state class for the BenchmarkScreen widget.
 class BenchmarkScreenState extends State<BenchmarkScreen> {
   final List<TestResult> result = [];
   bool isRunning = false;
@@ -61,6 +62,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
   int renderCount = 0;
   DateTime? testStartTime;
 
+  // Generates a list of random colors for the render test.
   List<Color> getRandomColors(int amount) {
     final random = Random();
     return List.generate(
@@ -74,6 +76,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     );
   }
 
+  // 1. CPU test
   Future<void> runCpuTest() async {
     setState(() {
       isRunning = true;
@@ -103,6 +106,38 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     });
   }
 
+
+  // 2. CPU test (5M)
+  Future<void> runCpuTest5M() async {
+    setState(() {
+      isRunning = true;
+      statusText = 'Suoritetaan CPU-testiä (5M)...';
+    });
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    final stopwatch = Stopwatch()..start();
+    int primes = 0;
+    for (int i = 2; i < 5000000; i++) {
+      bool isPrime = true;
+      for (int j = 2; j * j <= i; j++) {
+        if (i % j == 0) {
+          isPrime = false;
+          break;
+        }
+      }
+      if (isPrime) primes++;
+    }
+    stopwatch.stop();
+    setState(() {
+      isRunning = false;
+      statusText = 'CPU-testi valmis!';
+      result.add(
+        TestResult('CPU Testi (5M)', '${stopwatch.elapsedMilliseconds} ms'),
+      );
+    });
+  }
+
+  // 3. Render test
   void runRenderTest() {
     setState(() {
       isRunning = true;
@@ -116,6 +151,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     scheduleNextFrame();
   }
 
+  // Schedules the next frame for the render test, updating the colors and render count.
   void scheduleNextFrame() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!isRenderTestActive || testStartTime == null) return;
@@ -143,7 +179,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     });
   }
 
-  // 3. Memory test
+  // 4. Memory test
   Future<void> runMemoryTest() async {
     setState(() {
       isRunning = true;
@@ -176,7 +212,10 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     final endTime = DateTime.now().millisecondsSinceEpoch;
     final duration = endTime - startTime;
 
-    // 3. Vapautus roskienkeruulle
+    // Wait a moment to ensure the UI updates before clearing memory, to endure ADB log visibility
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    // 3. Release memory
     list.clear();
     list = null;
 
@@ -187,6 +226,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     });
   }
 
+  // Exports the test results to a CSV file and shares it using the Share package.
   Future<void> exportResults() async {
     if (result.isEmpty) {
       ScaffoldMessenger.of(
@@ -339,7 +379,28 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2196F3),
+                      padding: const EdgeInsets.all(15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: runCpuTest5M,
+                    child: const Text(
+                      "4. CPU Testi (5M)",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
                 SizedBox(
                   width: buttonWidth,
                   child: ElevatedButton(

@@ -99,6 +99,38 @@ fun BenchmarkScreen(){
             }
         }
     }
+    // Function for 5M CPU test.
+    fun runCpuTest5M() {
+        isRunning = true
+        statusText = "Suoritetaan CPU-testiä (5M)..."
+        
+        coroutineScope.launch(Dispatchers.Default){
+            kotlinx.coroutines.delay(100.milliseconds)
+            
+            val startTime = System.currentTimeMillis()
+            var primes = 0
+            
+            for (i in 2 until 5_000_000) {
+                var isPrime = true
+                val limit = sqrt(i.toDouble()).toInt()
+                for (j in 2..limit) {
+                    if (i % j == 0) {
+                        isPrime = false
+                        break
+                    }
+                }
+                if (isPrime) primes++
+            }
+            
+            val endTime = System.currentTimeMillis()
+            val duration = endTime - startTime
+            
+            results = results + TestResult("CPU Testi (5M)", "$duration ms")
+            isRunning = false
+            statusText = "CPU-testi (5M) valmis"
+        }
+    }
+    
     // Function to run Render test
     fun runRenderTest() {
         isRunning = true
@@ -157,6 +189,9 @@ fun BenchmarkScreen(){
             val endTime = System.currentTimeMillis()
             val duration = endTime - startTime
 
+            // Wait a bit to ensure memory is released before clearing the list, to ensure adb log shows memory usage correctly.
+            Thread.sleep(2500)
+
             // 3. Release memory and garbage collection.
             list?.clear()
             list = null
@@ -202,7 +237,9 @@ fun BenchmarkScreen(){
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(20.dp)
+            .padding(top = 50.dp)
+        ,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(20.dp))
@@ -292,6 +329,17 @@ fun BenchmarkScreen(){
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("3. Muistintestaus", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                Button(
+                    onClick = { runCpuTest5M() },
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("4. CPU Testi 5M", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(15.dp))
 
