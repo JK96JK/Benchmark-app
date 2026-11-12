@@ -11,6 +11,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
+import { createWorkletRuntime, runOnRuntimeAsync } from "react-native-worklets";
 
 // Define the BenchmarkItem interface to represent the structure of the mock data used in the memory test.
 interface BenchmarkItem {
@@ -44,14 +45,14 @@ export default function App() {
   };
   // 1. CPU Test: This function runs a CPU-intensive test by performing a large number of calculations.
   // It measures the time taken to complete the calculations and updates the result state with the duration.
-  // We calculate the number of prime numbers up to 1,000,000 and measure how long it takes to complete this calculation.
-  const runCPUTest = () => {
+  // We calculate the number of prime numbers up to given amount and measure the time taken to complete the calculations.
+  const runCPUTest = (amount: number) => {
     setIsRunning(true);
     setStatusText("Suoritetaan CPU-testiä...");
     setTimeout(() => {
       const startTime = performance.now();
       let primes = 0;
-      for (let i = 2; i < 1000000; i++) {
+      for (let i = 2; i < amount; i++) {
         let isPrime = true;
         for (let j = 2; j <= Math.sqrt(i); j++) {
           if (i % j === 0) {
@@ -63,9 +64,10 @@ export default function App() {
       }
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
+      const amountFormatted = amount/1000000;
       setResult((prev) => [
         ...prev,
-        { test: "CPU Testi (1M)", duration: `${duration} ms` },
+        { test: `CPU Testi (${amountFormatted} M)`, duration: `${duration} ms` },
       ]);
       setIsRunning(false);
       setStatusText("CPU-testi valmis");
@@ -82,6 +84,8 @@ export default function App() {
     renderStartTime.current = performance.now();
     setColors(getRandomColors(900));
   };
+
+  
 
   // useEffect hook to handle the render test logic.
   // It checks if the render test is active and updates the colors state every time the colors state changes.
@@ -112,12 +116,12 @@ export default function App() {
     }
   }, [colors, isRenderTestActive]);
 
-  // 3. Memory Test: This function runs a memory-intensive test by creating a large number of mock data objects and converting them to JSON.
-  // It measures the time taken to create and parse the JSON data and updates the result state with the duration.
+  // 3. Memory Test: This function runs a memory-intensive test by creating a large number of objects and performing operations on them.
+  // It measures the time taken to complete the operations and updates the result state with the duration.
   const runMemoryTest = () => {
     setIsRunning(true);
     setStatusText("Suoritetaan muistintestausta...");
-    setTimeout(() => {
+    setTimeout(async () => {
       const startTime = performance.now();
       const recordCount = 1000000;
       const baseTimestamp = 1700000000000;
@@ -140,6 +144,9 @@ export default function App() {
 
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
+
+      // Wait a moment to ensure the UI updates before clearing memory, to endure ADB log visibility
+      await new Promise((resolve) => setTimeout(resolve, 2500));
 
       // 3. Release the memory used by the list of BenchmarkItem objects to free up resources.
       list = null;
@@ -207,8 +214,8 @@ export default function App() {
       {/* Show the test buttons when not running any test. */}
       {!isRunning && (
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={runCPUTest}>
-            <Text style={styles.buttonText}>1. CPU Testi</Text>
+          <TouchableOpacity style={styles.button} onPress={() => runCPUTest(1000000)}>
+            <Text style={styles.buttonText}>1. CPU Testi (1M)</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button} onPress={runRenderTest}>
@@ -217,6 +224,14 @@ export default function App() {
 
           <TouchableOpacity style={styles.button} onPress={runMemoryTest}>
             <Text style={styles.buttonText}>3. Muistintestaus</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => runCPUTest(5000000)}
+          >
+            <Text style={styles.buttonText}>
+              4. CPU Testi (5M)
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -248,6 +263,7 @@ export default function App() {
 //@ts-ignore
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 40,
     flexGrow: 1,
     padding: 20,
     backgroundColor: "#f5f5f5",
@@ -270,7 +286,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     alignItems: "center",
   },
-  exportButton: { backgroundColor: "#4CAF50", marginTop: 20 },
+  exportButton: { backgroundColor: "#4CAF50"},
   buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
   resultsContainer: {
     width: "100%",
